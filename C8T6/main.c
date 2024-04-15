@@ -129,9 +129,31 @@ void force_temp_conv(void) {
 	}
 }
 
+bool check_time(TIME time) {
+	if (time.hour == 21 &&
+		time.minutes == 30 &&
+		time.seconds == 0
+	) return true;
+}
+void ring(TIME time) {
+	int flag = 0;
+	if (
+			time.hour == 21 &&
+			time.minutes == 4 &&
+			time.seconds == 0
+	) {
+		flag = time.seconds;
+		while (time.seconds <= flag + 5) {
+			HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 0);
+		}
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
+	}
+}
+
 
 float TEMP;
 char buffer[15];
+int time_hour = 
 
 /* USER CODE END 0 */
 
@@ -165,6 +187,11 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_Init(BUZZER_GPIO_Port, BUZZER_Pin);
+  if (HAL_GPIO_ReadPin(BUZZER_GPIO_Port, BUZZER_Pin) == 0) {
+	  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
+  }
+
 	lcd_init();
 	//Set_Time(00, 20, 20, 6, 12, 4, 24);
   /* USER CODE END 2 */
@@ -197,7 +224,18 @@ int main(void)
 		sprintf(buffer, "%f", TEMP);
 
 		lcd_send_string(buffer);
-	}
+		
+		
+		if (
+			check_time(time)		
+			) {
+			
+				while (time.seconds <= flag + 5) {
+					HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 0);
+				}
+				HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
+			}
+	}	
   /* USER CODE END 3 */
 }
 
@@ -296,7 +334,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : BUZZER_Pin */
   GPIO_InitStruct.Pin = BUZZER_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(BUZZER_GPIO_Port, &GPIO_InitStruct);
 
@@ -336,3 +374,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
+
