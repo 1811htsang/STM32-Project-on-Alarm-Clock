@@ -524,3 +524,7 @@ if (demtong == 3 && demmenu2 == 1) //CHỌN MENU 2: biến trở và độ sáng
   Serial.print("+/- menu 2: "); Serial.print(congtru_menu2); Serial.print("    ");
   Serial.print("Đếm back: "); Serial.print(demback); Serial.println("    ");
 }
+
+
+// https://youtu.be/EZg8Y9c7OWk?si=wfBx5w2CcQSVI7F_
+ (link tham khảo)
