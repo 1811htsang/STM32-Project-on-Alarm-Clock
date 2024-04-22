@@ -25,7 +25,7 @@
 
 #include "i2c-lcd.h"
 #include "stdio.h"
-
+#include <stdbool.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -128,218 +128,379 @@ void force_temp_conv(void) {
 				(uint8_t*) (control | (0x20)), 1, 100);
 	}
 }
-
-bool check_time(TIME time) {
-	if (time.hour == 21 &&
-		time.minutes == 30 &&
-		time.seconds == 0
-	) return true;
-}
-void ring(TIME time) {
-	int flag = 0;
-	if (
-			time.hour == 21 &&
-			time.minutes == 4 &&
-			time.seconds == 0
-	) {
-		flag = time.seconds;
-		while (time.seconds <= flag + 5) {
-			HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 0);
-		}
-		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
-	}
-}
-
-
 float TEMP;
 char buffer[15];
-int time_hour = 
+
+int hour = 10;
+int minute = 10;
+int second = 0;
+int cur = 6;
+int status_button_1;
+int status_button_2;
+int status_button_3;
+int status_button_left;
+int status_button_right;
+int status_button_confirm;
+int status_button_number;
+bool check_time(int h, int m, int s) {
+	if (time.hour == h && time.minutes == m && time.seconds == s)
+		return true;
+	else
+		return false;
+}
+
+void update_Time() {
+	Get_Time();
+
+	sprintf(buffer, "%02d:%02d:%02d", time.hour, time.minutes, time.seconds);
+	lcd_put_cur(0, 0);
+	lcd_send_string(buffer);
+
+	sprintf(buffer, "%02d-%02d-20%02d", time.dayofmonth, time.month, time.year);
+	lcd_put_cur(1, 0);
+	lcd_send_string(buffer);
+
+	force_temp_conv();
+
+	TEMP = Get_Temp();
+
+	lcd_put_cur(0, 10);
+
+	sprintf(buffer, "%f", TEMP);
+
+	lcd_send_string(buffer);
+}
+
+void button_menu() {
+	lcd_put_cur(1, 13);
+	lcd_send_string("123");
+}
+
+void first_menu() {
+	lcd_put_cur(0, 0);
+	lcd_send_string("1");
+	lcd_put_cur(0, 2);
+	lcd_send_string("na");
+	lcd_put_cur(1, 0);
+	lcd_send_string("time:");
+	lcd_put_cur(1, 6);
+	lcd_send_string("00:00:00");
+	lcd_put_cur(1, 14);
+	lcd_send_string("y");
+	lcd_put_cur(1, 15);
+	lcd_send_data(0x7F);
+	lcd_put_cur(1, 6);
+}
+
+void second_menu() {
+	lcd_put_cur(0, 0);
+	lcd_send_string("2");
+	lcd_put_cur(0, 2);
+	lcd_send_string("ct:");
+	lcd_put_cur(1, 0);
+	lcd_send_string("time:");
+	lcd_put_cur(1, 6);
+	lcd_send_string("00:00:00");
+	lcd_put_cur(1, 14);
+	lcd_send_string("y");
+	lcd_put_cur(1, 15);
+	lcd_send_data(0x7F);
+	lcd_put_cur(1, 6);
+}
+
+void third_menu() {
+	lcd_put_cur(0, 0);
+	lcd_send_string("3");
+	lcd_put_cur(0, 2);
+	lcd_send_string("awt");
+	lcd_put_cur(1, 0);
+	lcd_send_string("time:");
+	lcd_put_cur(1, 6);
+	lcd_send_string("00:00:00");
+	lcd_put_cur(1, 14);
+	lcd_send_string("y");
+	lcd_put_cur(1, 15);
+	lcd_send_data(0x7F);
+	lcd_put_cur(1, 6);
+}
+
+void alarm() {
+	if (check_time(hour, minute, second)) {
+		HAL_GPIO_WritePin(BUZZER_1_GPIO_Port, BUZZER_1_Pin, 0);
+	}
+}
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
-  /* USER CODE BEGIN 1 */
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
+	/* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
-  HAL_GPIO_Init(BUZZER_GPIO_Port, BUZZER_Pin);
-  if (HAL_GPIO_ReadPin(BUZZER_GPIO_Port, BUZZER_Pin) == 0) {
-	  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
-  }
-
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_I2C1_Init();
+	/* USER CODE BEGIN 2 */
+	HAL_GPIO_Init(BUZZER_1_GPIO_Port, BUZZER_1_Pin);
+	HAL_GPIO_WritePin(BUZZER_1_GPIO_Port, BUZZER_1_Pin, 1);
+//  HAL_GPIO_WritePin(BUZZER_2_GPIO_Port, BUZZER_2_Pin, 1);
+//  HAL_GPIO_Init(BUTTON_GPIO_Port, BUTTON_Pin);
+//  HAL_GPIO_Init(LED_GPIO_Port, LED_Pin);
 	lcd_init();
-	//Set_Time(00, 20, 20, 6, 12, 4, 24);
-  /* USER CODE END 2 */
+//  if (HAL_GPIO_ReadPin(BUZZER_GPIO_Port, BUZZER_Pin) == 0) {
+//	  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
+//  }
+//  HAL_TIM_Base_Start_IT(&htim2);
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	//Set_Time(00, 48, 12, 5, 18, 4, 24);
+//  	if (check_time(hour, minute, second) == true) {
+//		HAL_TIM_Base_Start_IT(&htim2);
+//	}
+//	if (time.seconds == second + 10) {
+//		HAL_TIM_Base_Stop_IT(&htim2);
+//	}
+	/* USER CODE END 2 */
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
 	while (1) {
-    /* USER CODE END WHILE */
+		/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+		/* USER CODE BEGIN 3 */
+		status_button_1 = HAL_GPIO_ReadPin(BUTTON_1_GPIO_Port, BUTTON_1_Pin);
+		status_button_2 = HAL_GPIO_ReadPin(BUTTON_2_GPIO_Port, BUTTON_2_Pin);
+		status_button_3 = HAL_GPIO_ReadPin(BUTTON_3_GPIO_Port, BUTTON_3_Pin);
 
-		Get_Time();
+		status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
+		BUTTON_NUMBER_Pin);
+		//alarm();
 
-		sprintf(buffer, "%02d:%02d:%02d", time.hour, time.minutes,
-				time.seconds);
-		lcd_put_cur(0, 0);
-		lcd_send_string(buffer);
-
-		sprintf(buffer, "%02d-%02d-20%02d", time.dayofmonth, time.month,
-				time.year);
-		lcd_put_cur(1, 0);
-		lcd_send_string(buffer);
-
-		force_temp_conv();
-
-		TEMP = Get_Temp();
-
-		lcd_put_cur(0, 10);
-
-		sprintf(buffer, "%f", TEMP);
-
-		lcd_send_string(buffer);
-		
-		
-		if (
-			check_time(time)		
-			) {
-			
-				while (time.seconds <= flag + 5) {
-					HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 0);
+		if (status_button_1 == 0) {
+			lcd_clear();
+			first_menu();
+			lcd_put_cur(1, 6);
+			lcd_send_cmd(0xF);
+			while (1) {
+				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
+				BUTTON_RIGHT_Pin);
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
 				}
-				HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
+				if (cur == 15) {
+					cur = 6;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
+				}
+				if (cur > 15)
+					break;
 			}
-	}	
-  /* USER CODE END 3 */
+			//
+			break;
+		} else if (status_button_2 == 0) {
+			lcd_clear();
+			second_menu();
+			lcd_put_cur(1, 6);
+			lcd_send_cmd(0xF);
+			while (1) {
+				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
+				BUTTON_RIGHT_Pin);
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
+				}
+				if (cur == 15) {
+					cur = 6;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
+				}
+				if (cur > 15)
+					break;
+			}
+			//
+			break;
+		} else if (status_button_3 == 0) {
+			lcd_clear();
+			third_menu();
+			lcd_put_cur(1, 6);
+			lcd_send_cmd(0xF);
+			while (1) {
+				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
+				BUTTON_RIGHT_Pin);
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
+				}
+				if (cur == 15) {
+					cur = 6;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(1000);
+				}
+				if (cur > 15)
+					break;
+			}
+			//
+			break;
+		} else {
+			update_Time();
+			button_menu();
+		}
+
+//		if (status_button_2 == 0) {
+//			second_menu();
+//		}
+//		if (status_button_3 == 0) {
+//			second_menu();
+//		}
+	}
+//	while (1) {
+//		if (status_button_right == 0) {
+//			lcd_send_cmd(0x14);
+//		} else if (status_button_left == 0) {
+//			lcd_send_cmd(0x10);
+//		}
+//		lcd_send_cmd(0xF);
+//	}
+	/* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	/** Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+	RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	/** Initializes the CPU, AHB and APB buses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 /**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
+ * @brief I2C1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_I2C1_Init(void) {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
+	/* USER CODE BEGIN I2C1_Init 0 */
 
-  /* USER CODE END I2C1_Init 0 */
+	/* USER CODE END I2C1_Init 0 */
 
-  /* USER CODE BEGIN I2C1_Init 1 */
+	/* USER CODE BEGIN I2C1_Init 1 */
 
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
-  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
+	/* USER CODE END I2C1_Init 1 */
+	hi2c1.Instance = I2C1;
+	hi2c1.Init.ClockSpeed = 100000;
+	hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+	hi2c1.Init.OwnAddress1 = 0;
+	hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+	hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c1.Init.OwnAddress2 = 0;
+	hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+	if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
+		Error_Handler();
+	}
+	/* USER CODE BEGIN I2C1_Init 2 */
 
-  /* USER CODE END I2C1_Init 2 */
+	/* USER CODE END I2C1_Init 2 */
 
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void) {
+	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+	/* USER CODE BEGIN MX_GPIO_Init_1 */
+	/* USER CODE END MX_GPIO_Init_1 */
 
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOD_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(BUZZER_1_GPIO_Port, BUZZER_1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : BUZZER_Pin */
-  GPIO_InitStruct.Pin = BUZZER_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BUZZER_GPIO_Port, &GPIO_InitStruct);
+	/*Configure GPIO pins : BUTTON_3_Pin BUTTON_2_Pin BUTTON_1_Pin BUTTON_RIGHT_Pin */
+	GPIO_InitStruct.Pin = BUTTON_3_Pin | BUTTON_2_Pin | BUTTON_1_Pin
+			| BUTTON_RIGHT_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+	/*Configure GPIO pins : BUTTON_LEFT_Pin BUTTON_CONFIRM_Pin BUTTON_NUMBER_Pin */
+	GPIO_InitStruct.Pin = BUTTON_LEFT_Pin | BUTTON_CONFIRM_Pin
+			| BUTTON_NUMBER_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_PULLUP;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : BUZZER_1_Pin */
+	GPIO_InitStruct.Pin = BUZZER_1_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(BUZZER_1_GPIO_Port, &GPIO_InitStruct);
+
+	/* USER CODE BEGIN MX_GPIO_Init_2 */
+	/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -347,15 +508,14 @@ static void MX_GPIO_Init(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+	/* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 
-  /* USER CODE END Error_Handler_Debug */
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
@@ -374,4 +534,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
