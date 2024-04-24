@@ -25,6 +25,7 @@
 
 #include "i2c-lcd.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include <stdbool.h>
 /* USER CODE END Includes */
 
@@ -135,13 +136,16 @@ int hour = 10;
 int minute = 10;
 int second = 0;
 int cur = 6;
+int num_i = 0;
+//string num_c[0];
 int status_button_1;
 int status_button_2;
 int status_button_3;
-int status_button_left;
+int status_button_return;
 int status_button_right;
 int status_button_confirm;
 int status_button_number;
+
 bool check_time(int h, int m, int s) {
 	if (time.hour == h && time.minutes == m && time.seconds == s)
 		return true;
@@ -180,7 +184,7 @@ void first_menu() {
 	lcd_put_cur(0, 0);
 	lcd_send_string("1");
 	lcd_put_cur(0, 2);
-	lcd_send_string("na");
+	lcd_send_string("normal alarm");
 	lcd_put_cur(1, 0);
 	lcd_send_string("time:");
 	lcd_put_cur(1, 6);
@@ -196,7 +200,7 @@ void second_menu() {
 	lcd_put_cur(0, 0);
 	lcd_send_string("2");
 	lcd_put_cur(0, 2);
-	lcd_send_string("ct:");
+	lcd_send_string("count time");
 	lcd_put_cur(1, 0);
 	lcd_send_string("time:");
 	lcd_put_cur(1, 6);
@@ -212,7 +216,7 @@ void third_menu() {
 	lcd_put_cur(0, 0);
 	lcd_send_string("3");
 	lcd_put_cur(0, 2);
-	lcd_send_string("awt");
+	lcd_send_string("alarm w time");
 	lcd_put_cur(1, 0);
 	lcd_send_string("time:");
 	lcd_put_cur(1, 6);
@@ -280,6 +284,7 @@ int main(void) {
 //		HAL_TIM_Base_Stop_IT(&htim2);
 //	}
 	/* USER CODE END 2 */
+
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
@@ -292,6 +297,7 @@ int main(void) {
 
 		status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
 		BUTTON_NUMBER_Pin);
+
 		//alarm();
 
 		if (status_button_1 == 0) {
@@ -300,13 +306,26 @@ int main(void) {
 			lcd_put_cur(1, 6);
 			lcd_send_cmd(0xF);
 			while (1) {
+				status_button_return = HAL_GPIO_ReadPin(BUTTON_RETURN_GPIO_Port,
+				BUTTON_RETURN_Pin);
+
 				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
 				BUTTON_RIGHT_Pin);
-				if (status_button_right == 0) {
-					cur++;
-					lcd_put_cur(1, cur);
-					lcd_send_cmd(0xF);
-					HAL_Delay(1000);
+
+				status_button_confirm = HAL_GPIO_ReadPin(
+				BUTTON_CONFIRM_GPIO_Port,
+				BUTTON_CONFIRM_Pin);
+
+				status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
+				BUTTON_NUMBER_Pin);
+
+				if (status_button_confirm == 0 && cur == 14) {
+					lcd_clear();
+					lcd_put_cur(0, 0);
+					lcd_send_string("FINISHED!");
+					HAL_Delay(2000);
+					lcd_clear();
+					break;
 				}
 				if (cur == 15) {
 					cur = 6;
@@ -314,24 +333,191 @@ int main(void) {
 					lcd_send_cmd(0xF);
 					HAL_Delay(1000);
 				}
-				if (cur > 15)
+				if (status_button_return == 0) {
+					lcd_clear();
 					break;
+				}
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(250);
+				}
+
+				if (status_button_number == 0) {
+					HAL_Delay(250);
+					num_i++;
+					lcd_put_cur(1, cur);
+					switch (cur) {
+					case 6:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 7:
+					case 10:
+					case 13:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 6:
+
+							lcd_send_string("6");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 7:
+
+							lcd_send_string("7");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 8:
+
+							lcd_send_string("8");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 9:
+
+							lcd_send_string("9");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 9:
+					case 12:
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						break;
+					default:
+						lcd_put_cur(1, cur);
+						break;
+					}
+				}
 			}
-			//
-			break;
-		} else if (status_button_2 == 0) {
+		}
+
+		//
+		/*
+		 * int num = 0;
+		 * if (HAL_GPIO_ReadPin(button) == )
+		 * */
+//			break;
+		if (status_button_2 == 0) {
 			lcd_clear();
 			second_menu();
 			lcd_put_cur(1, 6);
 			lcd_send_cmd(0xF);
 			while (1) {
+				status_button_return = HAL_GPIO_ReadPin(BUTTON_RETURN_GPIO_Port,
+				BUTTON_RETURN_Pin);
+
 				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
 				BUTTON_RIGHT_Pin);
-				if (status_button_right == 0) {
-					cur++;
-					lcd_put_cur(1, cur);
-					lcd_send_cmd(0xF);
-					HAL_Delay(1000);
+
+				status_button_confirm = HAL_GPIO_ReadPin(
+				BUTTON_CONFIRM_GPIO_Port,
+				BUTTON_CONFIRM_Pin);
+
+				status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
+				BUTTON_NUMBER_Pin);
+
+				if (status_button_confirm == 0 && cur == 14) {
+					lcd_clear();
+					lcd_put_cur(0, 0);
+					lcd_send_string("FINISHED!");
+					HAL_Delay(2000);
+					lcd_clear();
+					break;
 				}
 				if (cur == 15) {
 					cur = 6;
@@ -339,24 +525,184 @@ int main(void) {
 					lcd_send_cmd(0xF);
 					HAL_Delay(1000);
 				}
-				if (cur > 15)
+				if (status_button_return == 0) {
+					lcd_clear();
 					break;
+				}
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(250);
+				}
+
+				if (status_button_number == 0) {
+					HAL_Delay(250);
+					num_i++;
+					lcd_put_cur(1, cur);
+					switch (cur) {
+					case 6:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 7:
+					case 10:
+					case 13:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 6:
+
+							lcd_send_string("6");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 7:
+
+							lcd_send_string("7");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 8:
+
+							lcd_send_string("8");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 9:
+
+							lcd_send_string("9");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 9:
+					case 12:
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						break;
+					default:
+						lcd_put_cur(1, cur);
+						break;
+					}
+				}
 			}
-			//
-			break;
-		} else if (status_button_3 == 0) {
+		}
+		if (status_button_3 == 0) {
 			lcd_clear();
 			third_menu();
 			lcd_put_cur(1, 6);
 			lcd_send_cmd(0xF);
 			while (1) {
+				status_button_return = HAL_GPIO_ReadPin(BUTTON_RETURN_GPIO_Port,
+				BUTTON_RETURN_Pin);
+
 				status_button_right = HAL_GPIO_ReadPin(BUTTON_RIGHT_GPIO_Port,
 				BUTTON_RIGHT_Pin);
-				if (status_button_right == 0) {
-					cur++;
-					lcd_put_cur(1, cur);
-					lcd_send_cmd(0xF);
-					HAL_Delay(1000);
+
+				status_button_confirm = HAL_GPIO_ReadPin(
+				BUTTON_CONFIRM_GPIO_Port,
+				BUTTON_CONFIRM_Pin);
+
+				status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
+				BUTTON_NUMBER_Pin);
+
+				if (status_button_confirm == 0 && cur == 14) {
+					lcd_clear();
+					lcd_put_cur(0, 0);
+					lcd_send_string("FINISHED!");
+					HAL_Delay(2000);
+					lcd_clear();
+					break;
 				}
 				if (cur == 15) {
 					cur = 6;
@@ -364,15 +710,160 @@ int main(void) {
 					lcd_send_cmd(0xF);
 					HAL_Delay(1000);
 				}
-				if (cur > 15)
+				if (status_button_return == 0) {
+					lcd_clear();
 					break;
+				}
+				if (status_button_right == 0) {
+					cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					HAL_Delay(250);
+				}
+
+				if (status_button_number == 0) {
+					HAL_Delay(250);
+					num_i++;
+					lcd_put_cur(1, cur);
+					switch (cur) {
+					case 6:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 7:
+					case 10:
+					case 13:
+						//
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 6:
+
+							lcd_send_string("6");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 7:
+
+							lcd_send_string("7");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 8:
+
+							lcd_send_string("8");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 9:
+
+							lcd_send_string("9");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						//
+						break;
+					case 9:
+					case 12:
+						switch (num_i) {
+						case 1:
+							lcd_send_string("1");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 2:
+
+							lcd_send_string("2");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 3:
+
+							lcd_send_string("3");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 4:
+
+							lcd_send_string("4");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						case 5:
+
+							lcd_send_string("5");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						default:
+							num_i = 0;
+							lcd_send_string("0");
+							lcd_put_cur(1, cur);
+							lcd_send_cmd(0xE);
+							break;
+						}
+						break;
+					default:
+						lcd_put_cur(1, cur);
+						break;
+					}
+				}
 			}
-			//
-			break;
-		} else {
-			update_Time();
-			button_menu();
 		}
+		update_Time();
+		button_menu();
 
 //		if (status_button_2 == 0) {
 //			second_menu();
@@ -485,9 +976,9 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	/*Configure GPIO pins : BUTTON_LEFT_Pin BUTTON_CONFIRM_Pin BUTTON_NUMBER_Pin */
-	GPIO_InitStruct.Pin = BUTTON_LEFT_Pin | BUTTON_CONFIRM_Pin
-			| BUTTON_NUMBER_Pin;
+	/*Configure GPIO pins : BUTTON_RETURN_Pin BUTTON_CONFIRM_Pin BUTTON_NUMBER_Pin */
+	GPIO_InitStruct.Pin =
+	BUTTON_RETURN_Pin | BUTTON_CONFIRM_Pin | BUTTON_NUMBER_Pin;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
