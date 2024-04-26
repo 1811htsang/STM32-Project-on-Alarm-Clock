@@ -147,7 +147,6 @@ int status_button_return;
 int status_button_right;
 int status_button_reset;
 int status_button_number;
-int status_button_stop;
 bool check_time(int h, int m, int s) {
 	if (time.hour == h && time.minutes == m && time.seconds == s)
 		return true;
