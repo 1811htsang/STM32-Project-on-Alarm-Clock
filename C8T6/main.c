@@ -133,9 +133,6 @@ void force_temp_conv(void) {
 float TEMP;
 char buffer[15];
 
-int hour;
-int minute;
-int second;
 int cur = 6;
 int alarm_num[10];
 int num_i = 0;
@@ -147,6 +144,7 @@ int status_button_return;
 int status_button_right;
 int status_button_reset;
 int status_button_number;
+int status_button_stop;
 bool check_time(int h, int m, int s) {
 	if (time.hour == h && time.minutes == m && time.seconds == s)
 		return true;
@@ -229,8 +227,10 @@ void third_menu() {
 	lcd_put_cur(1, 6);
 }
 
-void alarm() {
-
+void alarm(int hour, int minute, int second) {
+	if (check_time(hour, minute, second)) {
+		HAL_GPIO_TogglePin(BUZZER_GPIO_Port, BUZZER_Pin);
+	}
 }
 
 /* USER CODE END 0 */
@@ -266,6 +266,9 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	int i = 0;
 	char s[3];
+	int hour = 0;
+	int minute = 0;
+	int second = 0;
 //	itoa(i, s, 10);
 	HAL_GPIO_Init(BUZZER_GPIO_Port, BUZZER_Pin);
 	HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 1);
@@ -287,6 +290,15 @@ int main(void) {
 //	if (time.seconds == second + 10) {
 //		HAL_TIM_Base_Stop_IT(&htim2);
 //	}
+//	itoa(hour, s, 10);
+//	lcd_send_string(s);
+//	lcd_put_cur(1, 4);
+//	itoa(minute, s, 10);
+//	lcd_send_string(s);
+//	lcd_put_cur(1, 10);
+//	itoa(second, s, 10);
+//	lcd_send_string(s);
+//	lcd_put_cur(1, 13);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -304,6 +316,7 @@ int main(void) {
 //		status_button_number = HAL_GPIO_ReadPin(BUTTON_NUMBER_GPIO_Port,
 //		BUTTON_NUMBER_Pin);
 		if (status_button_1 == 0) {
+//			HAL_Delay(1000);
 			lcd_clear();
 			first_menu();
 			lcd_put_cur(1, 6);
@@ -323,11 +336,6 @@ int main(void) {
 					lcd_put_cur(0, 0);
 					lcd_send_string("FINISHED!");
 					lcd_put_cur(1, 0);
-//					for (int j = 0; j < 8; j++) {
-//						itoa(alarm_num[j], s, 10);
-//						lcd_send_string(s);
-//						lcd_put_cur(1, j);
-//					}
 					hour = alarm_num[1] * 10 + alarm_num[2];
 					minute = alarm_num[3] * 10 + alarm_num[4];
 					second = alarm_num[5] * 10 + alarm_num[6];
@@ -335,20 +343,34 @@ int main(void) {
 						hour -= 24;
 					} else
 						hour -= 0;
-
-//					itoa(hour, s, 10);
-//					lcd_send_string(s);
-//					lcd_put_cur(1, 3);
-//					itoa(minute, s, 10);
-//					lcd_send_string(s);
-//					lcd_put_cur(1, 5);
-//					itoa(second, s, 10);
-//					lcd_send_string(s);
-//					lcd_put_cur(1, 7);
 					HAL_Delay(2000);
 					lcd_clear();
+					lcd_put_cur(1, 11);
+					lcd_send_string("!");
 					cur = 6;
 					break;
+				}
+				if (status_button_right == 0) {
+					//					if (cur == 6) {
+					//						alarm_num[i] = num_i;
+					//					}
+					num_i = 0;
+					if (cur == 7)
+						cur = 9;
+					else if (cur == 10)
+						cur = 12;
+					else
+						cur++;
+					lcd_put_cur(1, cur);
+					lcd_send_cmd(0xF);
+					//					if (cur == 8 || cur == 11 || cur == 14 || cur == 15) {
+					//						i += 0;
+					//					} else {
+					if (i == 9) {
+						i = 0;
+					} else i++;
+					//					}
+					HAL_Delay(500);
 				}
 				if (status_button_reset == 0 && cur == 14) {
 					cur = 6;
@@ -359,29 +381,6 @@ int main(void) {
 				if (status_button_return == 0) {
 					lcd_clear();
 					break;
-				}
-				if (status_button_right == 0) {
-//					if (cur == 6) {
-//						alarm_num[i] = num_i;
-//					}
-					num_i = 0;
-					if (cur == 7)
-						cur = 9;
-					else if (cur == 10)
-						cur = 12;
-					else
-						cur++;
-					lcd_put_cur(1, cur);
-					lcd_send_cmd(0xF);
-//					if (cur == 8 || cur == 11 || cur == 14 || cur == 15) {
-//						i += 0;
-//					} else {
-					if (i == 9) {
-						i = 0;
-					} else
-						i++;
-//					}
-					HAL_Delay(250);
 				}
 
 				if (status_button_number == 0) {
@@ -799,6 +798,13 @@ int main(void) {
 		}
 		update_Time();
 		button_menu();
+		if (time.hour == hour && time.minutes == minute
+				&& time.seconds == second) {
+			HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, 0);
+			update_Time();
+			button_menu();
+		} else
+			continue;
 //		alarm();
 
 //		if (status_button_2 == 0) {
