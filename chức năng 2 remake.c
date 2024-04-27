@@ -30,7 +30,7 @@ void countime(int hour, int minutes, int second){
 		time--;
 		HAL_delay(1000);
 	}
-	if (hour == 0 && minutes == 0 && second == 0){
+	if (time == 0){
 		Hal_GPIO_TogglePin(BUZZER_GPIO_Port, BUZZER_Pin);
 	}
 }
